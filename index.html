@@ -66,7 +66,7 @@
 
 <div id="content">加载中...</div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="marked.min.js"></script>
 <script>
 const REPORTS = [
   "VersePC2-安全审查报告",
@@ -75,38 +75,13 @@ const REPORTS = [
   "VersePC2-后门专项排查报告"
 ];
 
-async function loadReport(name) {
-  const content = document.getElementById('content');
-  content.innerHTML = '<p>加载中...</p>';
-  try {
-    const res = await fetch('reports/' + name + '.md');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    marked.setOptions({ breaks: false, gfm: true });
-    content.innerHTML = marked.parse(text);
-    document.title = name + ' — VersePC2 安全审查';
-    window.scrollTo(0, 0);
-  } catch (e) {
-    content.innerHTML = '<p>加载失败：' + e.message + '</p>';
-  }
-}
-
-function route() {
-  const hash = location.hash.replace('#', '');
-  if (hash && REPORTS.includes(hash)) {
-    loadReport(hash);
-  } else {
-    // 默认显示总览
-    showIndex();
-  }
-}
+const content = () => document.getElementById('content');
 
 function showIndex() {
-  const content = document.getElementById('content');
-  content.innerHTML = `
+  content().innerHTML = `
     <h2>报告列表</h2>
     <ul>
-      ${REPORTS.map(r => `<li><a href="#${r}">${r}</a></li>`).join('')}
+      ${REPORTS.map(r => `<li><a href="#${encodeURIComponent(r)}" data-report="${r}">${r}</a></li>`).join('')}
     </ul>
     <hr>
     <h2>说明</h2>
@@ -114,10 +89,46 @@ function showIndex() {
     <p>原始 Markdown 文件见仓库 <code>reports/</code> 目录，证据文件见 <code>evidence/</code> 目录。</p>
   `;
   document.title = 'VersePC2 安全审查结果';
+  bindLinks();
 }
 
-window.addEventListener('hashchange', route);
-window.addEventListener('DOMContentLoaded', route);
+async function loadReport(name) {
+  content().innerHTML = '<p>加载中…</p>';
+  try {
+    const res = await fetch('reports/' + encodeURIComponent(name) + '.md');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    marked.setOptions({ gfm: true, breaks: false });
+    content().innerHTML = marked.parse(text);
+    document.title = name + ' — VersePC2 安全审查';
+    window.scrollTo(0, 0);
+  } catch (e) {
+    content().innerHTML = '<p>加载失败：' + e.message + '</p>';
+  }
+}
+
+function bindLinks() {
+  // 顶部导航
+  document.querySelectorAll('#nav a').forEach(a => {
+    a.onclick = (ev) => {
+      ev.preventDefault();
+      const name = decodeURIComponent(a.getAttribute('href').slice(1));
+      loadReport(name);
+    };
+  });
+  // 列表链接
+  document.querySelectorAll('[data-report]').forEach(a => {
+    a.onclick = (ev) => {
+      ev.preventDefault();
+      loadReport(a.dataset.report);
+    };
+  });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  bindLinks();
+  showIndex();
+});
 </script>
 
 </body>
