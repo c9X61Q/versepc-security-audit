@@ -14,7 +14,6 @@ https://c9x61q.github.io/versepc-security-audit/
 | [远程端安全审查报告](reports/VersePC2-远程端安全审查报告.md) | 服务端接口、分发链路、联机节点审查 |
 | [后端安全审查报告](reports/VersePC2-后端安全审查报告.md) | verselauncher.cn 后端接口审查 |
 | [后门专项排查报告](reports/VersePC2-后门专项排查报告.md) | 8 维度后门排查（结论：未发现后门） |
-| [远程端交接清单](reports/VersePC2-远程端交接清单.md) | 客户端结论定格 + 远程端取证线索 |
 
 ## 目录
 
