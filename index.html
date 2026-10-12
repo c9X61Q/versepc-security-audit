@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VersePC2 安全审查结果</title>
+<style>
+  body {
+    background: #fff;
+    color: #000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  a { color: #000; text-decoration: underline; }
+  h1 { font-size: 24px; font-weight: 700; margin: 24px 0 12px; }
+  h2 { font-size: 20px; font-weight: 700; margin: 24px 0 10px; }
+  h3 { font-size: 17px; font-weight: 700; margin: 20px 0 8px; }
+  h4 { font-size: 16px; font-weight: 700; margin: 16px 0 6px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0; padding-left: 26px; }
+  li { margin: 4px 0; }
+  code {
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 14px;
+    background: #f4f4f4;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  pre {
+    background: #f6f6f6;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    overflow-x: auto;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 15px; }
+  th, td { border: 1px solid #ccc; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f4f4f4; font-weight: 700; }
+  blockquote { border-left: 3px solid #ccc; margin: 12px 0; padding: 2px 14px; color: #333; }
+  hr { border: 0; border-top: 1px solid #ddd; margin: 28px 0; }
+  #nav { margin-bottom: 26px; padding-bottom: 14px; border-bottom: 1px solid #ddd; font-size: 15px; }
+  #nav a { margin-right: 16px; }
+  #content { min-height: 300px; }
+  .muted { color: #555; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h1>VersePC2 安全审查结果</h1>
+<div class="muted">对 VersePC2 客户端及其远程端的静态安全审查</div>
+
+<div id="nav">
+  <a href="#VersePC2-安全审查报告">客户端</a>
+  <a href="#VersePC2-远程端安全审查报告">远程端</a>
+  <a href="#VersePC2-后端安全审查报告">后端</a>
+  <a href="#VersePC2-后门专项排查报告">后门排查</a>
+  <a href="#VersePC2-远程端交接清单">交接清单</a>
+</div>
+
+<div id="content">加载中...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+const REPORTS = [
+  "VersePC2-安全审查报告",
+  "VersePC2-远程端安全审查报告",
+  "VersePC2-后端安全审查报告",
+  "VersePC2-后门专项排查报告",
+  "VersePC2-远程端交接清单"
+];
+
+async function loadReport(name) {
+  const content = document.getElementById('content');
+  content.innerHTML = '<p>加载中...</p>';
+  try {
+    const res = await fetch('reports/' + name + '.md');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    marked.setOptions({ breaks: false, gfm: true });
+    content.innerHTML = marked.parse(text);
+    document.title = name + ' — VersePC2 安全审查';
+    window.scrollTo(0, 0);
+  } catch (e) {
+    content.innerHTML = '<p>加载失败：' + e.message + '</p>';
+  }
+}
+
+function route() {
+  const hash = location.hash.replace('#', '');
+  if (hash && REPORTS.includes(hash)) {
+    loadReport(hash);
+  } else {
+    // 默认显示总览
+    showIndex();
+  }
+}
+
+function showIndex() {
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <h2>报告列表</h2>
+    <ul>
+      ${REPORTS.map(r => `<li><a href="#${r}">${r}</a></li>`).join('')}
+    </ul>
+    <hr>
+    <h2>说明</h2>
+    <p>本页为 VersePC2 静态安全审查结果的在线阅读视图。点击上方链接查看各份报告。</p>
+    <p>原始 Markdown 文件见仓库 <code>reports/</code> 目录，证据文件见 <code>evidence/</code> 目录。</p>
+  `;
+  document.title = 'VersePC2 安全审查结果';
+}
+
+window.addEventListener('hashchange', route);
+window.addEventListener('DOMContentLoaded', route);
+</script>
+
+</body>
+</html>
