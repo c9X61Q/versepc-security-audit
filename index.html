@@ -7,16 +7,12 @@
 <title>VersePC2 安全审查结果</title>
 <style>
   body {
-    background: #fff;
-    color: #000;
+    background: #fff; color: #000;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
-    font-size: 16px;
-    line-height: 1.75;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 32px 24px 80px;
+    font-size: 16px; line-height: 1.75;
+    max-width: 900px; margin: 0 auto; padding: 32px 24px 80px;
   }
-  a { color: #000; text-decoration: underline; }
+  a { color: #000; text-decoration: underline; cursor: pointer; }
   h1 { font-size: 24px; font-weight: 700; margin: 24px 0 12px; }
   h2 { font-size: 20px; font-weight: 700; margin: 24px 0 10px; }
   h3 { font-size: 17px; font-weight: 700; margin: 20px 0 8px; }
@@ -24,22 +20,10 @@
   p { margin: 10px 0; }
   ul, ol { margin: 10px 0; padding-left: 26px; }
   li { margin: 4px 0; }
-  code {
-    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-    font-size: 14px;
-    background: #f4f4f4;
-    padding: 1px 5px;
-    border-radius: 3px;
-  }
-  pre {
-    background: #f6f6f6;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 12px;
-    overflow-x: auto;
-    font-size: 14px;
-    line-height: 1.5;
-  }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: 14px;
+         background: #f4f4f4; padding: 1px 5px; border-radius: 3px; }
+  pre { background: #f6f6f6; border: 1px solid #ddd; border-radius: 4px;
+        padding: 12px; overflow-x: auto; font-size: 14px; line-height: 1.5; }
   pre code { background: none; padding: 0; }
   table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 15px; }
   th, td { border: 1px solid #ccc; padding: 7px 10px; text-align: left; vertical-align: top; }
@@ -57,78 +41,104 @@
 <h1>VersePC2 安全审查结果</h1>
 <div class="muted">对 VersePC2 客户端及其远程端的静态安全审查</div>
 
-<div id="nav">
-  <a href="#VersePC2-安全审查报告">客户端</a>
-  <a href="#VersePC2-远程端安全审查报告">远程端</a>
-  <a href="#VersePC2-后端安全审查报告">后端</a>
-  <a href="#VersePC2-后门专项排查报告">后门排查</a>
-</div>
-
-<div id="content">加载中...</div>
+<div id="nav"></div>
+<div id="content">加载中…</div>
 
 <script src="marked.min.js"></script>
 <script>
-const REPORTS = [
+// 唯一的报告清单（改这里即可）
+var REPORTS = [
   "VersePC2-安全审查报告",
   "VersePC2-远程端安全审查报告",
   "VersePC2-后端安全审查报告",
   "VersePC2-后门专项排查报告"
 ];
 
-const content = () => document.getElementById('content');
+// 顶部导航的短标签
+var NAV_LABELS = {
+  "VersePC2-安全审查报告": "客户端",
+  "VersePC2-远程端安全审查报告": "远程端",
+  "VersePC2-后端安全审查报告": "后端",
+  "VersePC2-后门专项排查报告": "后门排查"
+};
 
+var contentEl;
+
+function el(id) { return document.getElementById(id); }
+
+// 加载并渲染报告
+function loadReport(name) {
+  contentEl.innerHTML = '<p>加载中…</p>';
+  fetch('reports/' + name + '.md')
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function (text) {
+      marked.setOptions({ gfm: true, breaks: false });
+      contentEl.innerHTML = marked.parse(text);
+      document.title = name + ' — VersePC2 安全审查';
+      window.scrollTo(0, 0);
+    })
+    .catch(function (e) {
+      contentEl.innerHTML = '<p>加载失败：' + e.message + '</p>';
+    });
+}
+
+// 首页
 function showIndex() {
-  content().innerHTML = `
-    <h2>报告列表</h2>
-    <ul>
-      ${REPORTS.map(r => `<li><a href="#${encodeURIComponent(r)}" data-report="${r}">${r}</a></li>`).join('')}
-    </ul>
-    <hr>
-    <h2>说明</h2>
-    <p>本页为 VersePC2 静态安全审查结果的在线阅读视图。点击上方链接查看各份报告。</p>
-    <p>原始 Markdown 文件见仓库 <code>reports/</code> 目录，证据文件见 <code>evidence/</code> 目录。</p>
-  `;
+  var items = REPORTS.map(function (r) {
+    return '<li><a href="javascript:void(0)" data-report="' + r + '">' + r + '</a></li>';
+  }).join('');
+  contentEl.innerHTML =
+    '<h2>报告列表</h2><ul>' + items + '</ul><hr>' +
+    '<h2>说明</h2>' +
+    '<p>本页为 VersePC2 静态安全审查结果的在线阅读视图，点击上方链接查看各份报告。</p>' +
+    '<p>原始 Markdown 文件见仓库 <code>reports/</code> 目录，证据文件见 <code>evidence/</code> 目录。</p>';
   document.title = 'VersePC2 安全审查结果';
-  bindLinks();
 }
 
-async function loadReport(name) {
-  content().innerHTML = '<p>加载中…</p>';
-  try {
-    const res = await fetch('reports/' + encodeURIComponent(name) + '.md');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    marked.setOptions({ gfm: true, breaks: false });
-    content().innerHTML = marked.parse(text);
-    document.title = name + ' — VersePC2 安全审查';
-    window.scrollTo(0, 0);
-  } catch (e) {
-    content().innerHTML = '<p>加载失败：' + e.message + '</p>';
-  }
-}
-
-function bindLinks() {
-  // 顶部导航
-  document.querySelectorAll('#nav a').forEach(a => {
-    a.onclick = (ev) => {
-      ev.preventDefault();
-      const name = decodeURIComponent(a.getAttribute('href').slice(1));
-      loadReport(name);
-    };
+// 顶部导航
+function renderNav() {
+  var nav = el('nav');
+  nav.innerHTML = '';
+  REPORTS.forEach(function (r) {
+    var a = document.createElement('a');
+    a.href = 'javascript:void(0)';
+    a.textContent = NAV_LABELS[r] || r;
+    a.setAttribute('data-report', r);
+    nav.appendChild(a);
   });
-  // 列表链接
-  document.querySelectorAll('[data-report]').forEach(a => {
-    a.onclick = (ev) => {
-      ev.preventDefault();
-      loadReport(a.dataset.report);
-    };
-  });
+  // 首页链接
+  var home = document.createElement('a');
+  home.href = 'javascript:void(0)';
+  home.textContent = '首页';
+  home.style.marginRight = '24px';
+  home.style.fontWeight = '700';
+  home.onclick = function () { showIndex(); };
+  nav.insertBefore(home, nav.firstChild);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  bindLinks();
+// 统一事件委托（整个文档只绑一次，彻底避免漏绑）
+function init() {
+  contentEl = el('content');
+  renderNav();
+
+  document.addEventListener('click', function (ev) {
+    var a = ev.target.closest ? ev.target.closest('a[data-report]') : null;
+    if (!a) return;
+    ev.preventDefault();
+    loadReport(a.getAttribute('data-report'));
+  });
+
   showIndex();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 
 </body>
